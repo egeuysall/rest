@@ -1,0 +1,39 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Build artifacts
+/build
+/bin
+/dist
+
+# Go modules cache (not needed in image)
+vendor/
+go.sum
+
+# VCS and tools
+.git
+.gitignore
+.gitattributes
+
+# Logs and temp files
+*.log
+*.tmp
+
+# IDE/editor configs
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment and secrets
+.env
+.env.*

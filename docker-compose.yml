@@ -1,0 +1,38 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ./frontend/.env.local
+    depends_on:
+      - backend
+    volumes:
+      - nextjs_static:/app/.next
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - go_data:/root/data
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  nextjs_static:
+  go_data:
+
+networks:
+  app-network:
+    driver: bridge
