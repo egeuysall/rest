@@ -35,8 +35,8 @@ func handleSpecialFlags(config *Config) {
 	}
 
 	switch {
-	case config.Once:
-		os.Exit(0)
+	case config.Times == 0:
+		fmt.Println("Debug: Times set to infinite")
 	case config.Help:
 		flag.Usage()
 		os.Exit(0)
