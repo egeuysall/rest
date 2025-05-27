@@ -1,0 +1,12 @@
+{
+  "_embedded": [
+    {
+      "name": "Ege",
+      "age": 12
+    },
+    {
+      "name": "Boo",
+      "age": 24
+    }
+  ]
+}

@@ -7,16 +7,6 @@ import (
 )
 
 func main() {
-    config := utils.ParseFlags()
-    used := utils.GetUsedFlags()
-
-    if used["d"] || used["data"] {
-        fmt.Println("Data flag used")
-    }
-
-    if used["o"] || used["once"] {
-        fmt.Println("Once flag used")
-    }
-
-    fmt.Printf("Data: %s\n", config.Data)
+	config := utils.ParseFlags()
+	fmt.Printf("JSON Data:\n%s\n", config.RawData)
 }
