@@ -10,30 +10,55 @@ import (
 )
 
 func SendPayload(raw json.RawMessage, expire int, reads int) {
-	payload := map[string]interface{}{
-		"data":  raw,
-		"ttl":   expire,
-		"reads": reads,
+	if expire <= 0 {
+		expire = 10
 	}
 
-	body, err := json.Marshal(payload)
+	payload := struct {
+		Data           json.RawMessage `json:"data"`
+		TTL            int            `json:"ttl"`
+		RemainingReads int            `json:"remaining_reads"`
+	}{
+		Data:           raw,
+		TTL:            expire,
+		RemainingReads: reads,
+	}
+
+	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to marshal payload: %v\n", err)
 		os.Exit(1)
 	}
 
-	resp, err := http.Post("http://localhost:8080/v1/payload", "application/json", bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, "http://localhost:8080/v1/payload", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create request: %v\n", err)
+		os.Exit(1)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Origin", "http://localhost:8080")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to send request: %v\n", err)
 		os.Exit(1)
 	}
 	defer resp.Body.Close()
 
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to read response: %v\n", err)
+		os.Exit(1)
+	}
+
 	if resp.StatusCode != http.StatusOK {
-		fmt.Fprintf(os.Stderr, "Unexpected status code: %d\n", resp.StatusCode)
+		fmt.Fprintf(os.Stderr, "Error: %s\nResponse: %s\n", resp.Status, string(body))
 		os.Exit(1)
 	}
 
 	fmt.Printf("Response status: %s\n", resp.Status)
-	io.Copy(os.Stdout, resp.Body)
+	fmt.Printf("Response body: %s\n", string(body))
 }

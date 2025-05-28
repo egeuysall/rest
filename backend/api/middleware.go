@@ -17,7 +17,7 @@ func ConfigureCORS() func(http.Handler) http.Handler {
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
-		Debug:            true,
+		Debug:            false,
 	})
 }
 

@@ -6,39 +6,65 @@ import (
 	"os"
 	"sync"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
 
 var (
-    Conn *pgx.Conn
-    once sync.Once
+	Pool *pgxpool.Pool
+	once sync.Once
 )
 
 func Connect() {
-    once.Do(func() {
-        if err := godotenv.Load(); err != nil {
-            log.Printf(".env file not found or failed to load: %v", err)
-        }
+	once.Do(func() {
+		if err := godotenv.Load(); err != nil {
+			log.Printf(".env file not found or failed to load: %v", err)
+		}
 
-        connString := os.Getenv("SUPABASE_DATABASE_URL")
-        if connString == "" {
-            log.Fatal("SUPABASE_DATABASE_URL environment variable not set")
-        }
+		connString := os.Getenv("SUPABASE_DATABASE_URL")
+		if connString == "" {
+			log.Fatal("SUPABASE_DATABASE_URL environment variable not set")
+		}
 
-        var err error
-        Conn, err = pgx.Connect(context.Background(), connString)
-        if err != nil {
-            log.Fatalf("Failed to connect to Supabase Postgres: %v", err)
-        }
+		config, err := pgxpool.ParseConfig(connString)
+		if err != nil {
+			log.Fatalf("Failed to parse connection string: %v", err)
+		}
 
-        log.Println("Connected to Supabase Postgres.")
-    })
+		config.ConnConfig.RuntimeParams["prepared_statements"] = "false"
+		config.ConnConfig.RuntimeParams["statement_cache_mode"] = "none"
+		config.ConnConfig.RuntimeParams["application_name"] = "rest_api"
+		
+		config.MaxConns = 10
+		config.MinConns = 2
+		
+		Pool, err = pgxpool.NewWithConfig(context.Background(), config)
+		if err != nil {
+			log.Fatalf("Failed to connect to database: %v", err)
+		}
+
+		conn, err := Pool.Acquire(context.Background())
+		if err != nil {
+			log.Fatalf("Failed to acquire connection: %v", err)
+		}
+		defer conn.Release()
+
+		_, err = conn.Exec(context.Background(), "SELECT 1")
+		if err != nil {
+			log.Fatalf("Failed to execute test query: %v", err)
+		}
+	})
 }
 
 func Close() {
-    if Conn != nil {
-        Conn.Close(context.Background())
-        log.Println("Closed database connection.")
-    }
+	if Pool != nil {
+		Pool.Close()
+	}
+}
+
+// DeleteExpiredPayloads deletes all payloads that have expired.
+func DeleteExpiredPayloads() error {
+	ctx := context.Background()
+	_, err := Pool.Exec(ctx, "DELETE FROM payloads WHERE expires_at IS NOT NULL AND expires_at < NOW()")
+	return err
 }
