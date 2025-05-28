@@ -69,7 +69,7 @@ Example: rest -d payload.json -t 5
 		os.Exit(1)
 	}
 
-	handleSpecialFlags(config)
+	HandleSpecialFlags(config)
 	return config
 }
 

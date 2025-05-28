@@ -17,7 +17,7 @@ var (
 
 func Connect() {
     once.Do(func() {
-        if err := godotenv.Load("../.env"); err != nil {
+        if err := godotenv.Load(); err != nil {
             log.Printf(".env file not found or failed to load: %v", err)
         }
 

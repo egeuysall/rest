@@ -1,8 +1,8 @@
 package db
 
 import (
-    "testing"
 	"context"
+	"testing"
 )
 
 func TestConnectAndClose(t *testing.T) {

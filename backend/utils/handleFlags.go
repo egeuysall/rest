@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	"github.com/egeuysall/rest/api"
 )
 
 func handleDataFlag(data string) (json.RawMessage, error) {
@@ -24,7 +26,7 @@ func handleDataFlag(data string) (json.RawMessage, error) {
 	return fileData, nil
 }
 
-func handleSpecialFlags(config *Config) {
+func HandleSpecialFlags(config *Config) {
 	if config.Data != "" {
 		data, err := handleDataFlag(config.Data)
 		if err != nil {
@@ -34,14 +36,36 @@ func handleSpecialFlags(config *Config) {
 		config.RawData = data
 	}
 
-	switch {
-	case config.Times == 0:
-		fmt.Println("Debug: Times set to infinite")
-	case config.Help:
+	if config.Help {
 		flag.Usage()
 		os.Exit(0)
-	case config.Version:
+	}
+
+	if config.Version {
 		fmt.Printf("Version %s\n", version)
 		os.Exit(0)
+	}
+
+	if config.Times >= -1 {
+		SetTimes(config.Times)
+		if config.Times == -1 {
+			fmt.Println("Times set to infinite")
+		} else {
+			fmt.Printf("Times set to %d\n", config.Times)
+		}
+	}
+
+	if config.Expire >= -1 {
+		SetExpire(config.Expire)
+		if config.Expire == -1 {
+			fmt.Println("Expire set to infinite")
+		} else {
+			fmt.Printf("Expire set to %d\n", config.Expire)
+		}
+	}
+
+	// If RawData is set, send the payload
+	if config.RawData != nil {
+		api.SendPayload(config.RawData, config.Expire, config.Times)
 	}
 }
