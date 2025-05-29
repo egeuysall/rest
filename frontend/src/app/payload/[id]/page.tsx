@@ -34,18 +34,28 @@ export default function PayloadPage({ params }: Props) {
   useEffect(() => {
     const fetchPayload = async () => {
       try {
+        const apiKey = process.env.NEXT_PUBLIC_REST_API_KEY;
+        if (!apiKey) {
+          throw new Error("API key is not configured");
+        }
+
         const apiUrl = `https://restapi.egeuysal.com/v1/payload/${id}`;
         console.log("Fetching from:", apiUrl);
 
         const res = await fetch(apiUrl, {
           headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_REST_API_KEY}`,
+            Authorization: `Bearer ${apiKey}`,
           },
         });
 
         if (!res.ok) {
           if (res.status === 404) {
             notFound();
+          }
+          if (res.status === 401) {
+            throw new Error(
+              "Authentication failed - please check API key configuration"
+            );
           }
           throw new Error(`API request failed with status ${res.status}`);
         }
