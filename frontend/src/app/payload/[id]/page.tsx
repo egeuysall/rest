@@ -4,8 +4,18 @@ import { notFound } from "next/navigation";
 import CodeBlock from "@/components/code-block";
 import { Clock, RefreshCw } from "lucide-react";
 
+type PayloadData = {
+  [key: string]:
+    | string
+    | number
+    | boolean
+    | null
+    | PayloadData
+    | Array<PayloadData>;
+};
+
 type ApiResponse = {
-  data: Record<string, any>;
+  data: PayloadData;
   expires_at: string;
   remaining_reads: number;
 };

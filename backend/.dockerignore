@@ -12,10 +12,6 @@
 /bin
 /dist
 
-# Go modules cache (not needed in image)
-vendor/
-go.sum
-
 # VCS and tools
 .git
 .gitignore
@@ -33,7 +29,3 @@ go.sum
 # OS files
 .DS_Store
 Thumbs.db
-
-# Environment and secrets
-.env
-.env.*
