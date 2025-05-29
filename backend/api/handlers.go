@@ -106,7 +106,7 @@ func createPayloadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"id": id,
-		"url": fmt.Sprintf("http://localhost:3000/payload/%s", id),
+		"url": fmt.Sprintf("https://www.rest.egeuysal.com/payload/%s", id),
 	})
 }
 

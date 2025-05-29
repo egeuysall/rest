@@ -30,7 +30,7 @@ func SendPayload(raw json.RawMessage, expire int, reads int) {
 		os.Exit(1)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, "http://localhost:8080/v1/payload", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest(http.MethodPost, "https://restapi.egeuysal.com/v1/payload", bytes.NewBuffer(jsonData))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create request: %v\n", err)
 		os.Exit(1)
@@ -38,7 +38,7 @@ func SendPayload(raw json.RawMessage, expire int, reads int) {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Origin", "http://localhost:8080")
+	req.Header.Set("Origin", "https://restapi.egeuysal.com")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

@@ -27,23 +27,12 @@ type Props = {
 export default async function PayloadPage({ params }: Props) {
   const { id } = await params;
 
-  if (!process.env.NEXT_PUBLIC_API_URL || !process.env.REST_API_KEY) {
-    throw new Error("Required environment variables are not set");
-  }
-
   try {
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/v1/payload/${id}`;
-    const res = await fetch(apiUrl, {
-      cache: "no-store",
-      headers: {
-        Authorization: `Bearer ${process.env.REST_API_KEY}`,
-      },
-    });
+    const apiUrl = `https://restapi.egeuysal.com/v1/payload/${id}`;
+    const res = await fetch(apiUrl, { cache: "no-store" });
 
     if (!res.ok) {
-      if (res.status === 404) {
-        notFound();
-      }
+      if (res.status === 404) notFound();
       throw new Error(`API request failed with status ${res.status}`);
     }
 
@@ -86,7 +75,7 @@ export default async function PayloadPage({ params }: Props) {
       error instanceof Error &&
       !error.message.includes("NEXT_HTTP_ERROR_FALLBACK;404")
     ) {
-      throw new Error(`Failed to fetch payload: ${error.message}`);
+      throw error;
     }
     throw error;
   }

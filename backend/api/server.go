@@ -25,10 +25,6 @@ func authMiddleware(next http.Handler) http.Handler {
 		}
 
 		apiKey := os.Getenv("REST_API_KEY")
-		if apiKey == "" {
-			log.Fatal("REST_API_KEY environment variable not set")
-		}
-
 		if parts[1] != apiKey {
 			http.Error(w, "Invalid API key", http.StatusUnauthorized)
 			return
@@ -41,7 +37,6 @@ func authMiddleware(next http.Handler) http.Handler {
 func StartServer() {
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
-
 	r.Use(ConfigureCORS())
 	r.Use(NewRateLimiter(1, 3).EnforceRateLimit())
 
@@ -49,15 +44,16 @@ func StartServer() {
 	r.Get("/health", checkHealth)
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Use(authMiddleware)
 		r.Post("/payload", createPayloadHandler)
-		r.Get("/payload/{id}", getPayloadHandler)
-		r.Delete("/payload/{id}", deletePayloadHandler)
-		r.Post("/payload/{id}/view", trackViewHandler)
+		r.Group(func(r chi.Router) {
+			r.Use(authMiddleware)
+			r.Get("/payload/{id}", getPayloadHandler)
+			r.Delete("/payload/{id}", deletePayloadHandler)
+			r.Post("/payload/{id}/view", trackViewHandler)
+		})
 	})
 
-	err := http.ListenAndServe(":8080", r)
-	if err != nil {
-		log.Fatal("Failed to start server: ", err)
+	if err := http.ListenAndServe(":8080", r); err != nil {
+		log.Fatal(err)
 	}
 }

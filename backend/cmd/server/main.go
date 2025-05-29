@@ -27,5 +27,5 @@ func main() {
 
 	api.StartServer()
 
-	fmt.Println("Server running on http://localhost:8080")
+	fmt.Println("Server running on https://restapi.egeuysal.com/v1/payload")
 } 
