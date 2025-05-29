@@ -1,0 +1,82 @@
+export const dynamic = "force-dynamic";
+
+import { notFound } from "next/navigation";
+import CodeBlock from "@/components/code-block";
+import { Clock, RefreshCw } from "lucide-react";
+
+type PayloadData = {
+  [key: string]:
+    | string
+    | number
+    | boolean
+    | null
+    | PayloadData
+    | Array<PayloadData>;
+};
+
+type ApiResponse = {
+  data: PayloadData;
+  expires_at: string;
+  remaining_reads: number;
+};
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function PayloadPage({ params }: Props) {
+  const { id } = await params;
+
+  try {
+    const apiUrl = `https://restapi.egeuysal.com/v1/payload/${id}`;
+    const res = await fetch(apiUrl, { cache: "no-store" });
+
+    if (!res.ok) {
+      if (res.status === 404) notFound();
+      throw new Error(`API request failed with status ${res.status}`);
+    }
+
+    const payload: ApiResponse = await res.json();
+
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-full max-w-3xl mx-auto px-4 py-12">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+            <div className="p-8 border-b border-neutral-200 dark:border-neutral-800">
+              <h1 className="text-3xl font-bold text-foreground text-center mb-6">
+                Payload Details
+              </h1>
+              <div className="flex justify-center gap-8">
+                <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+                  <RefreshCw className="w-4 h-4" />
+                  <span>Remaining Reads: {payload.remaining_reads}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+                  <Clock className="w-4 h-4" />
+                  <span>
+                    Expires: {new Date(payload.expires_at).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="p-8">
+              <CodeBlock
+                code={JSON.stringify(payload.data, null, 2)}
+                language="json"
+                fileName="payload"
+              />
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      !error.message.includes("NEXT_HTTP_ERROR_FALLBACK;404")
+    ) {
+      throw error;
+    }
+    throw error;
+  }
+}

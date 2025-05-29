@@ -32,6 +32,7 @@ services:
   nginx:
     image: nginx:alpine
     container_name: nginx
+    restart: always
     ports:
       - "80:80"
       - "443:443"
@@ -45,7 +46,6 @@ services:
       - frontend
     networks:
       - app-network
-    restart: always
 
   certbot:
     image: certbot/certbot
