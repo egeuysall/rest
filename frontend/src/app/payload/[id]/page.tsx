@@ -29,7 +29,12 @@ export default async function PayloadPage({ params }: Props) {
 
   try {
     const apiUrl = `https://restapi.egeuysal.com/v1/payload/${id}`;
-    const res = await fetch(apiUrl, { cache: "no-store" });
+    const res = await fetch(apiUrl, { 
+      cache: "no-store",
+      headers: {
+        'Authorization': `Bearer ${process.env.REST_API_KEY}`
+      }
+    });
 
     if (!res.ok) {
       if (res.status === 404) notFound();
