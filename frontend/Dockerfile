@@ -16,6 +16,7 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV NEXT_PUBLIC_REST_API_KEY=your_api_key_here
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
