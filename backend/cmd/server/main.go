@@ -11,8 +11,7 @@ import (
 func main() {
 	db.Connect()
 	defer db.Close()
-
-	// Start background cleanup for expired payloads
+	
 	go func() {
 		ticker := time.NewTicker(5 * time.Minute)
 		defer ticker.Stop()

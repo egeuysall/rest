@@ -106,7 +106,7 @@ func createPayloadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"id": id,
-		"url": fmt.Sprintf("http://localhost:3000/%s", id),
+		"url": fmt.Sprintf("http://localhost:3000/payload/%s", id),
 	})
 }
 
@@ -126,16 +126,36 @@ func getPayloadHandler(w http.ResponseWriter, r *http.Request) {
 	var expiresAt time.Time
 
 	query := fmt.Sprintf(
-		"SELECT data, remaining_reads, expires_at FROM payloads WHERE id = '%s' AND (expires_at > NOW() OR expires_at IS NULL)",
+		"SELECT data, remaining_reads, expires_at FROM payloads WHERE id = '%s' FOR UPDATE",
 		id,
 	)
 	err = tx.QueryRow(ctx, query).Scan(&data, &remainingReads, &expiresAt)
 	if err != nil {
-		http.Error(w, "Payload not found or expired", http.StatusNotFound)
+		http.Error(w, "Payload not found", http.StatusNotFound)
+		return
+	}
+
+	if !expiresAt.IsZero() && expiresAt.Before(time.Now()) {
+		query = fmt.Sprintf("DELETE FROM payloads WHERE id = '%s'", id)
+		_, err = tx.Exec(ctx, query)
+		if err != nil {
+			http.Error(w, "Failed to delete expired payload", http.StatusInternalServerError)
+			return
+		}
+		if err := tx.Commit(ctx); err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		http.Error(w, "Payload has expired", http.StatusGone)
 		return
 	}
 
 	if remainingReads != -1 {
+		if remainingReads <= 0 {
+			http.Error(w, "No remaining reads", http.StatusGone)
+			return
+		}
+
 		remainingReads--
 		if remainingReads == 0 {
 			query = fmt.Sprintf("DELETE FROM payloads WHERE id = '%s'", id)
@@ -151,7 +171,7 @@ func getPayloadHandler(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"data": data,
-				"status": "deleted",
+				"status": "success",
 				"message": "Payload has been deleted after last read",
 			})
 			return
@@ -193,13 +213,29 @@ func trackViewHandler(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback(ctx)
 
 	var remainingReads int
+	var expiresAt time.Time
 	query := fmt.Sprintf(
-		"SELECT remaining_reads FROM payloads WHERE id = '%s' AND (expires_at > NOW() OR expires_at IS NULL)",
+		"SELECT remaining_reads, expires_at FROM payloads WHERE id = '%s' FOR UPDATE",
 		id,
 	)
-	err = tx.QueryRow(ctx, query).Scan(&remainingReads)
+	err = tx.QueryRow(ctx, query).Scan(&remainingReads, &expiresAt)
 	if err != nil {
-		http.Error(w, "Payload not found or expired", http.StatusNotFound)
+		http.Error(w, "Payload not found", http.StatusNotFound)
+		return
+	}
+
+	if !expiresAt.IsZero() && expiresAt.Before(time.Now()) {
+		query = fmt.Sprintf("DELETE FROM payloads WHERE id = '%s'", id)
+		_, err = tx.Exec(ctx, query)
+		if err != nil {
+			http.Error(w, "Failed to delete expired payload", http.StatusInternalServerError)
+			return
+		}
+		if err := tx.Commit(ctx); err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		http.Error(w, "Payload has expired", http.StatusGone)
 		return
 	}
 
@@ -217,7 +253,7 @@ func trackViewHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"status": "deleted",
+			"status": "success",
 			"message": "Payload has been deleted after last read",
 		})
 		return

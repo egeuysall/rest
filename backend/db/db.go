@@ -65,6 +65,10 @@ func Close() {
 // DeleteExpiredPayloads deletes all payloads that have expired.
 func DeleteExpiredPayloads() error {
 	ctx := context.Background()
-	_, err := Pool.Exec(ctx, "DELETE FROM payloads WHERE expires_at IS NOT NULL AND expires_at < NOW()")
+	_, err := Pool.Exec(ctx, `
+		DELETE FROM payloads 
+		WHERE (expires_at IS NOT NULL AND expires_at < NOW())
+		AND remaining_reads = 0
+	`)
 	return err
 }

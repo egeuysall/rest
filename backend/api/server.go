@@ -51,7 +51,6 @@ func StartServer() {
 	r.Route("/v1", func(r chi.Router) {
 		r.Use(authMiddleware)
 		r.Post("/payload", createPayloadHandler)
-		r.Get("/payload", createPayloadHandler)
 		r.Get("/payload/{id}", getPayloadHandler)
 		r.Delete("/payload/{id}", deletePayloadHandler)
 		r.Post("/payload/{id}/view", trackViewHandler)
