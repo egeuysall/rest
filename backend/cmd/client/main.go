@@ -51,7 +51,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	req, err := http.NewRequest("POST", "http://restapi.egeuysal.com/v1/payload", bytes.NewBuffer(jsonPayload))
+	req, err := http.NewRequest("POST", "https://restapi.egeuysal.com/v1/payload", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
