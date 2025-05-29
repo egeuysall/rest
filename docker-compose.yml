@@ -7,7 +7,7 @@ services:
     environment:
       - NODE_ENV=production
     env_file:
-      - ./frontend/.env.local
+      - ./frontend/.env.production
     depends_on:
       - backend
     volumes:
