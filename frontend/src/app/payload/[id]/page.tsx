@@ -29,11 +29,11 @@ export default async function PayloadPage({ params }: Props) {
 
   try {
     const apiUrl = `https://restapi.egeuysal.com/v1/payload/${id}`;
-    const res = await fetch(apiUrl, { 
+    const res = await fetch(apiUrl, {
       cache: "no-store",
       headers: {
-        'Authorization': `Bearer ${process.env.REST_API_KEY}`
-      }
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_REST_API_KEY}`,
+      },
     });
 
     if (!res.ok) {
