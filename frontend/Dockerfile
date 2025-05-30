@@ -10,14 +10,14 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ARG NEXT_PUBLIC_REST_API_KEY
+ENV NEXT_PUBLIC_REST_API_KEY=$NEXT_PUBLIC_REST_API_KEY
 RUN pnpm build
 
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
-ARG NEXT_PUBLIC_REST_API_KEY
-ENV NEXT_PUBLIC_REST_API_KEY=$NEXT_PUBLIC_REST_API_KEY
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
