@@ -13,7 +13,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Rest: ",
+  title: "Rest: Post. Expire. Vanish.",
   description:
     "Share sensitive JSON payloads securely with one-time access or timed expiration. Fast, minimalist, and built for privacy-focused developers.",
   icons: {
