@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import CodeBlock from "@/components/code-block";
-import { Clock, RefreshCw } from "lucide-react";
+import { Clock, RefreshCw, AlertCircle } from "lucide-react";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -96,14 +96,28 @@ export default async function Page({ params }: PageProps) {
     );
   } catch (error) {
     console.error("Error in Page component:", error);
-    // Return error UI instead of throwing
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-red-500">
-          Error:{" "}
-          {error instanceof Error
-            ? error.message
-            : "An unexpected error occurred"}
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-red-200 dark:border-red-800 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertCircle className="w-6 h-6 text-red-500" />
+              <h2 className="text-xl font-semibold text-red-500">Error</h2>
+            </div>
+            <p className="text-neutral-700 dark:text-neutral-300">
+              {error instanceof Error
+                ? error.message
+                : "An unexpected error occurred"}
+            </p>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors duration-200"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
