@@ -28,10 +28,10 @@ export default async function Page({ params }: PageProps) {
       notFound();
     }
 
-    const apiKey = process.env.REST_API_KEY;
+    const apiKey = process.env.NEXT_PUBLIC_REST_API_KEY;
     if (!apiKey) {
-      console.error("REST_API_KEY is missing");
-      throw new Error("REST_API_KEY is missing");
+      console.error("NEXT_PUBLIC_REST_API_KEY is missing");
+      throw new Error("NEXT_PUBLIC_REST_API_KEY is missing");
     }
 
     console.log("Fetching payload for ID:", id);
