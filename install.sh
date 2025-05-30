@@ -1,5 +1,4 @@
 #!/bin/sh
-
 set -e
 
 VERSION="1.0.3"
@@ -24,7 +23,7 @@ case "$OS" in
     ;;
 esac
 
-# Detect ARCH
+# Detect Architecture
 ARCH=$(uname -m)
 case "$ARCH" in
   x86_64|amd64) ARCH="amd64" ;;
@@ -39,15 +38,25 @@ FILE="rest_${VERSION}_${OS}_${ARCH}.tar.gz"
 URL="https://github.com/${REPO}/releases/download/v${VERSION}/${FILE}"
 CHECKSUM_URL="https://github.com/${REPO}/releases/download/v${VERSION}/rest_${VERSION}_checksums.txt"
 
+echo "Downloading checksum file..."
+curl -fsSL "$CHECKSUM_URL" -o "$TMPDIR/checksums.txt"
+
 echo "Downloading $FILE ..."
 curl -fsSL "$URL" -o "$TMPDIR/$FILE"
 
-echo "Downloading checksums ..."
-curl -fsSL "$CHECKSUM_URL" -o "$TMPDIR/checksums.txt"
+if command -v sha256sum >/dev/null 2>&1; then
+  CHECKSUM_TOOL="sha256sum"
+elif command -v shasum >/dev/null 2>&1; then
+  CHECKSUM_TOOL="shasum -a 256"
+else
+  echo "Error: neither sha256sum nor shasum found."
+  exit 1
+fi
 
 echo "Verifying checksum..."
+
 EXPECTED_SUM=$(grep "$FILE" "$TMPDIR/checksums.txt" | awk '{print $1}')
-ACTUAL_SUM=$(shasum -a 256 "$TMPDIR/$FILE" | awk '{print $1}')
+ACTUAL_SUM=$($CHECKSUM_TOOL "$TMPDIR/$FILE" | awk '{print $1}')
 
 if [ "$EXPECTED_SUM" != "$ACTUAL_SUM" ]; then
   echo "❌ Checksum verification failed!"
