@@ -9,7 +9,7 @@ export default function NotFound() {
             Payload Not Found
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-            The payload you're looking for doesn't exist or has expired.
+            The payload you&apos;re looking for doesn&apos;t exist or has expired.
           </p>
           <Link
             href="/"
