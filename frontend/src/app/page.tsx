@@ -10,8 +10,8 @@ export default function Home() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (payloadId.trim()) {
-      router.push(`/payload/${payloadId.trim()}`);
+    if (payloadId) {
+      router.push(`/payload/${payloadId}`);
     }
   };
 

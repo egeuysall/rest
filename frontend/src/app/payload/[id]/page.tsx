@@ -1,19 +1,16 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { use } from "react";
 import { notFound } from "next/navigation";
 import CodeBlock from "@/components/code-block";
 import { Clock, RefreshCw } from "lucide-react";
 
+type PageProps = {
+  params: Promise<{ id: string }>;
+};
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type PayloadData = {
-  [key: string]:
-    | string
-    | number
-    | boolean
-    | null
-    | PayloadData
-    | Array<PayloadData>;
+  [key: string]: string | number | boolean | null | PayloadData | PayloadData[];
 };
 
 type ApiResponse = {
@@ -22,103 +19,93 @@ type ApiResponse = {
   remaining_reads: number;
 };
 
-type Props = {
-  params: Promise<{ id: string }>;
-};
+export default async function Page({ params }: PageProps) {
+  try {
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
+    if (!id) {
+      console.error("No ID provided");
+      notFound();
+    }
 
-export default function PayloadPage({ params }: Props) {
-  const { id } = use(params);
-  const [payload, setPayload] = useState<ApiResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+    const apiKey = process.env.REST_API_KEY;
+    if (!apiKey) {
+      console.error("REST_API_KEY is missing");
+      throw new Error("REST_API_KEY is missing");
+    }
 
-  useEffect(() => {
-    const fetchPayload = async () => {
-      try {
-        const apiKey = process.env.NEXT_PUBLIC_REST_API_KEY;
-        if (!apiKey) {
-          throw new Error("API key is not configured");
-        }
+    console.log("Fetching payload for ID:", id);
+    const res = await fetch(`https://restapi.egeuysal.com/v1/payload/${id}`, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+      cache: "no-store",
+    });
 
-        const apiUrl = `https://restapi.egeuysal.com/v1/payload/${id}`;
-        console.log("Fetching from:", apiUrl);
+    console.log("Response status:", res.status);
+    if (res.status === 404) {
+      console.error("Payload not found");
+      notFound();
+    }
 
-        const res = await fetch(apiUrl, {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-          },
-        });
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("API error response:", errorText);
+      throw new Error(`API error: ${res.status} - ${errorText}`);
+    }
 
-        if (!res.ok) {
-          if (res.status === 404) {
-            notFound();
-          }
-          if (res.status === 401) {
-            throw new Error(
-              "Authentication failed - please check API key configuration"
-            );
-          }
-          throw new Error(`API request failed with status ${res.status}`);
-        }
+    const payload: ApiResponse = await res.json();
+    console.log("Successfully fetched payload:", payload);
 
-        const data = await res.json();
-        setPayload(data);
-      } catch (err) {
-        console.error("Error fetching payload:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch payload"
-        );
-      }
-    };
+    if (!payload || !payload.data) {
+      console.error("Invalid payload format:", payload);
+      throw new Error("Invalid payload format");
+    }
 
-    fetchPayload();
-  }, [id]);
-
-  if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-red-500">Error: {error}</div>
-      </div>
-    );
-  }
-
-  if (!payload) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-neutral-600">Loading...</div>
-      </div>
-    );
-  }
-
-  return (
-    <main className="min-h-screen bg-background flex items-center justify-center">
-      <div className="w-full max-w-3xl mx-auto px-4 py-12">
-        <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-          <div className="p-8 border-b border-neutral-200 dark:border-neutral-800">
-            <h1 className="text-3xl font-bold text-foreground text-center mb-6">
-              Payload Details
-            </h1>
-            <div className="flex justify-center gap-8">
-              <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
-                <RefreshCw className="w-4 h-4" />
-                <span>Remaining Reads: {payload.remaining_reads}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
-                <Clock className="w-4 h-4" />
-                <span>
-                  Expires: {new Date(payload.expires_at).toLocaleString()}
-                </span>
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-full max-w-3xl mx-auto px-4 py-12">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+            <div className="p-8 border-b border-neutral-200 dark:border-neutral-800">
+              <h1 className="text-3xl font-bold text-foreground text-center mb-6">
+                Payload Details
+              </h1>
+              <div className="flex justify-center gap-8">
+                <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+                  <RefreshCw className="w-4 h-4" />
+                  <span>Remaining Reads: {payload.remaining_reads}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+                  <Clock className="w-4 h-4" />
+                  <span>
+                    Expires: {new Date(payload.expires_at).toLocaleString()}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="p-8">
-            <CodeBlock
-              code={JSON.stringify(payload.data, null, 2)}
-              language="json"
-              fileName="payload"
-            />
+            <div className="p-8">
+              <CodeBlock
+                code={JSON.stringify(payload.data, null, 2)}
+                language="json"
+                fileName="payload"
+              />
+            </div>
           </div>
         </div>
+      </main>
+    );
+  } catch (error) {
+    console.error("Error in Page component:", error);
+    // Return error UI instead of throwing
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-red-500">
+          Error:{" "}
+          {error instanceof Error
+            ? error.message
+            : "An unexpected error occurred"}
+        </div>
       </div>
-    </main>
-  );
+    );
+  }
 }
