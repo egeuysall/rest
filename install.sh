@@ -70,9 +70,11 @@ echo "✅ Checksum verified."
 echo "Extracting archive..."
 tar -xzf "$TMPDIR/$FILE" -C "$TMPDIR"
 
-echo "Installing binary to /usr/local/bin ..."
-chmod +x "$TMPDIR/rest"
-sudo mv "$TMPDIR/rest" /usr/local/bin/rest
+EXTRACTED_DIR=$(tar -tzf "$TMPDIR/$FILE" | head -1 | cut -f1 -d"/")
+
+echo "Installing binary from $EXTRACTED_DIR/rest ..."
+chmod +x "$TMPDIR/$EXTRACTED_DIR/rest"
+sudo mv "$TMPDIR/$EXTRACTED_DIR/rest" /usr/local/bin/rest
 
 echo "✅ Installation complete. Version info:"
 rest --version
