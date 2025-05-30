@@ -77,6 +77,12 @@ func createPayloadHandler(w http.ResponseWriter, r *http.Request) {
 		expiresAt = time.Now().Add(time.Duration(payload.ExpiresIn) * time.Minute)
 	} else if payload.TTL > 0 {
 		expiresAt = time.Now().Add(time.Duration(payload.TTL) * time.Minute)
+	} else {
+		expiresAt = time.Now().Add(10 * time.Minute)
+	}
+
+	if payload.RemainingReads == 0 {
+		payload.RemainingReads = 1
 	}
 
 	ctx := context.Background()
@@ -158,21 +164,26 @@ func getPayloadHandler(w http.ResponseWriter, r *http.Request) {
 
 		remainingReads--
 		if remainingReads == 0 {
-			query = fmt.Sprintf("DELETE FROM payloads WHERE id = '%s'", id)
+			query = fmt.Sprintf(
+				"UPDATE payloads SET remaining_reads = 0 WHERE id = '%s'",
+				id,
+			)
 			_, err = tx.Exec(ctx, query)
 			if err != nil {
-				http.Error(w, "Failed to delete payload", http.StatusInternalServerError)
+				http.Error(w, "Failed to update remaining reads", http.StatusInternalServerError)
 				return
 			}
+
 			if err := tx.Commit(ctx); err != nil {
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
+
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"data": data,
-				"status": "success",
-				"message": "Payload has been deleted after last read",
+				"remaining_reads": 0,
+				"expires_at": expiresAt,
 			})
 			return
 		}
