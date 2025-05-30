@@ -46,14 +46,15 @@ echo "Downloading $FILE ..."
 curl -fsSL "$URL" -o "$TMPDIR/$FILE"
 
 echo "Verifying checksum..."
-grep "$FILE" "$TMPDIR/checksums.txt" | sha256sum -c -
+cd "$TMPDIR"
+sha256sum -c checksums.txt --ignore-missing
 
 echo "Extracting archive..."
-tar -xzf "$TMPDIR/$FILE" -C "$TMPDIR"
+tar -xzf "$FILE"
 
 echo "Installing binary to /usr/local/bin ..."
-chmod +x "$TMPDIR/rest"
-sudo mv "$TMPDIR/rest" /usr/local/bin/rest
+chmod +x rest
+sudo mv rest /usr/local/bin/rest
 
-echo "Installation complete. Version info:"
+echo "✅ Installation complete. Version info:"
 rest --version
