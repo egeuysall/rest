@@ -2,12 +2,12 @@ version: 2
 
 before:
   hooks:
-    - (cd backend && go mod tidy)
-    - (cd backend && go generate ./...)
+    - go mod tidy
+    - go generate ./...
 
 builds:
   - id: rest
-    dir: ./backend
+    dir: .
     main: ./cmd/client/main.go
     binary: rest
     env:
@@ -23,7 +23,11 @@ builds:
 archives:
   - id: default
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+      - goos: '*'
+        format: tar.gz
     wrap_in_directory: true
     files:
       - LICENSE
