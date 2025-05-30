@@ -137,7 +137,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
           </figcaption>
         )}
         <div className={cn("relative group")}>
-          <div className="h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-300 dark:scrollbar-thumb-neutral-700 scrollbar-track-transparent hover:scrollbar-thumb-neutral-400 dark:hover:scrollbar-thumb-neutral-600">
+          <div className="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-300 dark:scrollbar-thumb-neutral-700 scrollbar-track-transparent hover:scrollbar-thumb-neutral-400 dark:hover:scrollbar-thumb-neutral-600">
             <div
               className={cn(
                 "grid grid-cols-[auto_1fr] w-full font-mono",
