@@ -70,9 +70,18 @@ echo "✅ Checksum verified."
 echo "Extracting archive..."
 tar -xzf "$TMPDIR/$FILE" -C "$TMPDIR"
 
+# Get the first directory name from the archive
 EXTRACTED_DIR=$(tar -tzf "$TMPDIR/$FILE" | head -1 | cut -f1 -d"/")
 
-echo "Installing binary from $EXTRACTED_DIR/rest ..."
+# Verify the binary exists before proceeding
+if [ ! -f "$TMPDIR/$EXTRACTED_DIR/rest" ]; then
+  echo "❌ Error: Binary not found in extracted archive"
+  echo "Contents of $TMPDIR/$EXTRACTED_DIR:"
+  ls -la "$TMPDIR/$EXTRACTED_DIR"
+  exit 1
+fi
+
+echo "Installing binary to /usr/local/bin ..."
 chmod +x "$TMPDIR/$EXTRACTED_DIR/rest"
 sudo mv "$TMPDIR/$EXTRACTED_DIR/rest" /usr/local/bin/rest
 
