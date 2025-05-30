@@ -25,11 +25,6 @@ archives:
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format: tar.gz
     wrap_in_directory: true
-    replacements:
-      amd64: x86_64
-      386: i386
-      darwin: macOS
-      linux: Linux
     files:
       - LICENSE
       - README.md
