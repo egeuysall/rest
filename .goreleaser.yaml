@@ -2,8 +2,8 @@ version: 2
 
 before:
   hooks:
-    - go mod tidy
-    - go generate ./...
+    - (cd backend && go mod tidy)
+    - (cd backend && go generate ./...)
 
 builds:
   - id: rest
@@ -22,12 +22,14 @@ builds:
 
 archives:
   - id: default
-    name_template: >-
-      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format: tar.gz
-    format_overrides:
-      - goos: windows
-        format: zip
+    wrap_in_directory: true
+    replacements:
+      amd64: x86_64
+      386: i386
+      darwin: macOS
+      linux: Linux
     files:
       - LICENSE
       - README.md
@@ -43,6 +45,3 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
-
-snapshot:
-  name_template: "dev"
