@@ -1,7 +1,6 @@
 # --- Node.js ---
 node_modules/
 .next/
-dist/
 build/
 .nyc_output/
 coverage/
