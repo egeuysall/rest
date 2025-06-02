@@ -1,2 +1,4 @@
 vendor/
 bru/
+go.sum
+go.mod
