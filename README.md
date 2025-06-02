@@ -1,7 +1,7 @@
 <p align="center">
   <a href="https://www.rest.egeuysal.com/">
     <img src="https://res.cloudinary.com/ddjnqljd8/image/upload/v1748623162/rest-logo.png" height="96">
-    <h3 align="center">Spot</h3>
+    <h3 align="center">Rest</h3>
   </a>
 </p>
 
