@@ -1,4 +1,4 @@
-package api
+package utils
 
 import (
 	"bytes"
@@ -61,4 +61,4 @@ func SendPayload(raw json.RawMessage, expire int, reads int) {
 
 	fmt.Printf("Response status: %s\n", resp.Status)
 	fmt.Printf("Response body: %s\n", string(body))
-}
+} 

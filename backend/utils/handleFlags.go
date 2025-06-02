@@ -5,8 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-
-	"github.com/egeuysall/rest/api"
 )
 
 func handleDataFlag(data string) (json.RawMessage, error) {
@@ -59,6 +57,6 @@ func HandleSpecialFlags(config *Config) {
 
 	// If RawData is set, send the payload
 	if config.RawData != nil {
-		api.SendPayload(config.RawData, config.Expire, config.Times)
+		SendPayload(config.RawData, config.Expire, config.Times)
 	}
 }
