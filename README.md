@@ -11,7 +11,7 @@
 
 <p align=center>
     <strong>
-        <a href="CONTRIBUTING.md">Contributing</a>
+        <a href="./CONTRIBUTING.md">Contributing</a>
     </strong>
 </p>
 
