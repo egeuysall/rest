@@ -13,7 +13,7 @@ func main() {
 	defer db.Close()
 	
 	go func() {
-		ticker := time.NewTicker(5 * time.Minute)
+		ticker := time.NewTicker(3 * time.Minute)
 		defer ticker.Stop()
 		for {
 			<-ticker.C

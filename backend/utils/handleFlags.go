@@ -14,7 +14,7 @@ func handleDataFlag(data string) (json.RawMessage, error) {
 		return nil, fmt.Errorf("no data provided")
 	}
 	
-	fileData, err := ReadJSONFile(data)
+	fileData, err := ReadJsonFile(data)
 	if err != nil {
 		return nil, err
 	}
@@ -38,11 +38,6 @@ func HandleSpecialFlags(config *Config) {
 
 	if config.Help {
 		flag.Usage()
-		os.Exit(0)
-	}
-
-	if config.Version {
-		fmt.Printf("Version %s\n", version)
 		os.Exit(0)
 	}
 

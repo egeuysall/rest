@@ -28,7 +28,11 @@ func checkHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 func StorePayload(data json.RawMessage, expire int, times int) error {
-	expiresAt := time.Now().Add(time.Duration(expire) * time.Minute)
+	var expiresAt *time.Time
+	if expire != -1 {
+		t := time.Now().Add(time.Duration(expire) * time.Minute)
+		expiresAt = &t
+	}
 
 	ctx := context.Background()
 	tx, err := db.Pool.Begin(ctx)
@@ -38,10 +42,18 @@ func StorePayload(data json.RawMessage, expire int, times int) error {
 	defer tx.Rollback(ctx)
 
 	var id string
-	query := fmt.Sprintf(
-		"INSERT INTO payloads (data, expires_at, remaining_reads) VALUES ('%s', '%s', %d) RETURNING id",
-		data, expiresAt.Format(time.RFC3339), times,
-	)
+	var query string
+	if expiresAt != nil {
+		query = fmt.Sprintf(
+			"INSERT INTO payloads (data, expires_at, remaining_reads) VALUES ('%s', '%s', %d) RETURNING id",
+			data, expiresAt.Format(time.RFC3339), times,
+		)
+	} else {
+		query = fmt.Sprintf(
+			"INSERT INTO payloads (data, expires_at, remaining_reads) VALUES ('%s', NULL, %d) RETURNING id",
+			data, times,
+		)
+	}
 	err = tx.QueryRow(ctx, query).Scan(&id)
 	if err != nil {
 		return fmt.Errorf("failed to store payload: %v", err)
@@ -72,13 +84,16 @@ func createPayloadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var expiresAt time.Time
+	var expiresAt *time.Time
 	if payload.ExpiresIn > 0 {
-		expiresAt = time.Now().Add(time.Duration(payload.ExpiresIn) * time.Minute)
+		t := time.Now().Add(time.Duration(payload.ExpiresIn) * time.Minute)
+		expiresAt = &t
 	} else if payload.TTL > 0 {
-		expiresAt = time.Now().Add(time.Duration(payload.TTL) * time.Minute)
-	} else {
-		expiresAt = time.Now().Add(10 * time.Minute)
+		t := time.Now().Add(time.Duration(payload.TTL) * time.Minute)
+		expiresAt = &t
+	} else if payload.ExpiresIn != -1 && payload.TTL != -1 {
+		t := time.Now().Add(10 * time.Minute)
+		expiresAt = &t
 	}
 
 	if payload.RemainingReads == 0 {
@@ -94,10 +109,18 @@ func createPayloadHandler(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback(ctx)
 
 	var id string
-	query := fmt.Sprintf(
-		"INSERT INTO payloads (data, expires_at, remaining_reads) VALUES ('%s', '%s', %d) RETURNING id",
-		payload.Data, expiresAt.Format(time.RFC3339), payload.RemainingReads,
-	)
+	var query string
+	if expiresAt != nil {
+		query = fmt.Sprintf(
+			"INSERT INTO payloads (data, expires_at, remaining_reads) VALUES ('%s', '%s', %d) RETURNING id",
+			payload.Data, expiresAt.Format(time.RFC3339), payload.RemainingReads,
+		)
+	} else {
+		query = fmt.Sprintf(
+			"INSERT INTO payloads (data, expires_at, remaining_reads) VALUES ('%s', NULL, %d) RETURNING id",
+			payload.Data, payload.RemainingReads,
+		)
+	}
 	err = tx.QueryRow(ctx, query).Scan(&id)
 	if err != nil {
 		http.Error(w, "Failed to store payload", http.StatusInternalServerError)
@@ -129,7 +152,7 @@ func getPayloadHandler(w http.ResponseWriter, r *http.Request) {
 
 	var data json.RawMessage
 	var remainingReads int
-	var expiresAt time.Time
+	var expiresAt *time.Time
 
 	query := fmt.Sprintf(
 		"SELECT data, remaining_reads, expires_at FROM payloads WHERE id = '%s' FOR UPDATE",
@@ -141,7 +164,7 @@ func getPayloadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !expiresAt.IsZero() && expiresAt.Before(time.Now()) {
+	if expiresAt != nil && expiresAt.Before(time.Now()) {
 		query = fmt.Sprintf("DELETE FROM payloads WHERE id = '%s'", id)
 		_, err = tx.Exec(ctx, query)
 		if err != nil {
@@ -209,86 +232,6 @@ func getPayloadHandler(w http.ResponseWriter, r *http.Request) {
 		"data": data,
 		"remaining_reads": remainingReads,
 		"expires_at": expiresAt,
-	})
-}
-
-func trackViewHandler(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	
-	ctx := context.Background()
-	tx, err := db.Pool.Begin(ctx)
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-	defer tx.Rollback(ctx)
-
-	var remainingReads int
-	var expiresAt time.Time
-	query := fmt.Sprintf(
-		"SELECT remaining_reads, expires_at FROM payloads WHERE id = '%s' FOR UPDATE",
-		id,
-	)
-	err = tx.QueryRow(ctx, query).Scan(&remainingReads, &expiresAt)
-	if err != nil {
-		http.Error(w, "Payload not found", http.StatusNotFound)
-		return
-	}
-
-	if !expiresAt.IsZero() && expiresAt.Before(time.Now()) {
-		query = fmt.Sprintf("DELETE FROM payloads WHERE id = '%s'", id)
-		_, err = tx.Exec(ctx, query)
-		if err != nil {
-			http.Error(w, "Failed to delete expired payload", http.StatusInternalServerError)
-			return
-		}
-		if err := tx.Commit(ctx); err != nil {
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
-		}
-		http.Error(w, "Payload has expired", http.StatusGone)
-		return
-	}
-
-	remainingReads--
-	if remainingReads <= 0 {
-		query = fmt.Sprintf("DELETE FROM payloads WHERE id = '%s'", id)
-		_, err = tx.Exec(ctx, query)
-		if err != nil {
-			http.Error(w, "Failed to delete payload", http.StatusInternalServerError)
-			return
-		}
-		if err := tx.Commit(ctx); err != nil {
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"status": "success",
-			"message": "Payload has been deleted after last read",
-		})
-		return
-	}
-
-	query = fmt.Sprintf(
-		"UPDATE payloads SET remaining_reads = %d WHERE id = '%s'",
-		remainingReads, id,
-	)
-	_, err = tx.Exec(ctx, query)
-	if err != nil {
-		http.Error(w, "Failed to update remaining reads", http.StatusInternalServerError)
-		return
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"status": "success",
-		"remaining_reads": remainingReads,
 	})
 }
 

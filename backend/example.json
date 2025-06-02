@@ -1,0 +1,18 @@
+{
+  "company": {
+    "name": "ExampleCorp",
+    "departments": [
+      {
+        "name": "Engineering",
+        "employees": [
+          { "name": "Alice", "role": "Developer" },
+          { "name": "Bob", "role": "DevOps" }
+        ]
+      },
+      {
+        "name": "Marketing",
+        "employees": [{ "name": "Carol", "role": "SEO Specialist" }]
+      }
+    ]
+  }
+}

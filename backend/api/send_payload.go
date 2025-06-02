@@ -10,7 +10,7 @@ import (
 )
 
 func SendPayload(raw json.RawMessage, expire int, reads int) {
-	if expire <= 0 {
+	if expire < -1 {
 		expire = 10
 	}
 

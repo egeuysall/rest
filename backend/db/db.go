@@ -35,7 +35,7 @@ func Connect() {
 		config.ConnConfig.RuntimeParams["statement_cache_mode"] = "none"
 		config.ConnConfig.RuntimeParams["application_name"] = "rest_api"
 		
-		config.MaxConns = 10
+		config.MaxConns = 20
 		config.MinConns = 2
 		
 		Pool, err = pgxpool.NewWithConfig(context.Background(), config)

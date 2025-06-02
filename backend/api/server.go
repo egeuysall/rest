@@ -49,7 +49,6 @@ func StartServer() {
 			r.Use(authMiddleware)
 			r.Get("/payload/{id}", getPayloadHandler)
 			r.Delete("/payload/{id}", deletePayloadHandler)
-			r.Post("/payload/{id}/view", trackViewHandler)
 		})
 	})
 

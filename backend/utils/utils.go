@@ -9,15 +9,12 @@ import (
 	"strings"
 )
 
-var version string = "1.0.0"
-
 type Config struct {
 	Data    string
 	RawData json.RawMessage
 	Expire  int
 	Times   int
 	Help    bool
-	Version bool
 }
 
 func ParseFlags() *Config {
@@ -34,18 +31,11 @@ func ParseFlags() *Config {
 	flag.IntVar(&config.Times, "t", 1, "Number of times the data can be accessed before deletion (shorthand)")
 	flag.BoolVar(&config.Help, "help", false, "Show help message")
 	flag.BoolVar(&config.Help, "h", false, "Show help message (shorthand)")
-	flag.BoolVar(&config.Version, "version", false, "Show version")
-	flag.BoolVar(&config.Version, "v", false, "Show version (shorthand)")
 
 	flag.Parse()
 
 	if config.Help {
 		flag.Usage()
-		os.Exit(0)
-	}
-
-	if config.Version {
-		fmt.Printf("Version %s\n", version)
 		os.Exit(0)
 	}
 
@@ -55,13 +45,13 @@ func ParseFlags() *Config {
 		os.Exit(1)
 	}
 
-	if config.Expire < 1 {
+	if config.Expire < -1 {
 		config.Expire = 10
 	}
 
 	var raw json.RawMessage
-	if strings.HasSuffix(config.Data, ".json") || strings.HasSuffix(config.Data, ".txt") {
-		r, err := ReadJSONFile(config.Data)
+	if strings.HasSuffix(config.Data, ".json") {
+		r, err := ReadJsonFile(config.Data)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to read file: %v\n", err)
 			os.Exit(1)
@@ -76,7 +66,7 @@ func ParseFlags() *Config {
 	return config
 }
 
-func ReadJSONFile(filePath string) (json.RawMessage, error) {
+func ReadJsonFile(filePath string) (json.RawMessage, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
