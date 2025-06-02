@@ -47,7 +47,6 @@ func HandleSpecialFlags(config *Config) {
 	}
 
 	if config.Times >= -1 {
-		SetTimes(config.Times)
 		if config.Times == -1 {
 			fmt.Println("Times set to infinite")
 		} else {
@@ -56,7 +55,6 @@ func HandleSpecialFlags(config *Config) {
 	}
 
 	if config.Expire >= -1 {
-		SetExpire(config.Expire)
 		if config.Expire == -1 {
 			fmt.Println("Expire set to infinite")
 		} else {

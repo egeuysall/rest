@@ -37,21 +37,6 @@ func ParseFlags() *Config {
 	flag.BoolVar(&config.Version, "version", false, "Show version")
 	flag.BoolVar(&config.Version, "v", false, "Show version (shorthand)")
 
-	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), `
-Usage: rest [options]
-
-Options:
-  -data, -d     JSON string or file path (required)
-  -expire, -e   Minutes until expiration (default: 10)
-  -times, -t    Delete after N accesses (0 = infinite, default: 1)
-  -version, -v  Show version
-  -help, -h     Show this help message
-
-Example: rest -d payload.json -t 5 -e 30
-`)
-	}
-
 	flag.Parse()
 
 	if config.Help {
